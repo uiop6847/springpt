@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.demo.mappers.OrderMapper">
+
+	<!-- 주문코드 시퀀스 가져오기 -->
+	<select id="readOrderCode" resultType="int">
+		select seq_odr_code.nextval from dual
+	</select>
+	
+	
+	<!-- 주문내역 추가 -->
+	<insert id="addOrderDetail" parameterType="OrderDetailVO">
+		insert into order_detail_tbl(odr_code, pdt_num, odr_amount, odr_price)
+		values(#{odr_code}, #{pdt_num}, #{odr_amount}, #{odr_price})
+	</insert>
+	
+	
+	
+	<!-- 주문정보 추가 -->
+	<insert id="addOrder" parameterType="OrderVO">
+		insert into order_tbl(odr_code, mem_id, odr_name, 
+			odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date)
+		values(#{odr_code}, #{mem_id}, #{odr_name}, 
+			#{odr_zipcode}, #{odr_addr}, #{odr_addr_d}, #{odr_phone}, #{odr_total_price}, sysdate)
+	</insert>
+	
+	<!-- 주문목록 -->
+	<select id="orderList" parameterType="string" resultType="OrderListVO">
+		select p.pdt_img, p.pdt_name, d.odr_code, d.pdt_num, d.odr_amount, d.odr_price, o.odr_date
+		from order_detail_tbl d
+		inner join order_tbl o 
+			on d.odr_code = o.odr_code
+		inner join product_tbl p
+			on d.pdt_num=p.pdt_num
+		where o.mem_id= #{mem_id}
+		order by d.odr_code desc, d.pdt_num desc
+	</select>
+	
+	<!-- 주문 상세 정보 -->
+	<select id="readOrder" parameterType="int" resultType="OrderReadDetailVO" >
+		select d.odr_amount, d.pdt_num, d.odr_price, 
+		p.pdt_name, p.pdt_img, p.pdt_price
+		from order_detail_tbl d
+		inner join product_tbl p
+			on d.pdt_num=p.pdt_num
+		where d.odr_code=#{odr_code}
+	</select>
+	
+	<!-- 주문자 정보 -->
+	<select id="getOrder" parameterType="int" resultType="OrderVO" >
+		select odr_code, mem_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date
+		from order_tbl
+		where odr_code=#{odr_code}
+	</select>
+
+</mapper>

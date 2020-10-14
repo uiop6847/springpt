@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.demo.mappers.MemberMapper">
+	
+	<!-- MemberVO 가져오기 -->
+	<select id="readUserInfo" parameterType="string" resultType="MemberVO">
+		select  mem_id, mem_name, mem_pw, mem_email, mem_zipcode, mem_addr, mem_addr_d, 
+			mem_phone, mem_nick, mem_accept_e, mem_point, 
+			mem_date_sub, mem_date_up, mem_date_last, mem_authcode
+		from member_tbl
+		where mem_id = #{mem_id}
+	</select> 
+	
+	<!-- 로그인(MemberDTO 가져옴) 비번을 파라미터 사용안하고 있음에 주의 -->
+	<select id="login" parameterType="MemberDTO" resultType="MemberDTO">
+		select mem_id, mem_pw, mem_nick, mem_name, mem_point, mem_date_last
+		from member_tbl
+		where mem_id=#{mem_id}
+		
+	</select>
+	
+	<!-- 로그인 시간 업데이트 -->
+	<update id="loginUpdate" parameterType="string">
+		update member_tbl
+		set mem_date_last = sysdate
+		where mem_id = #{mem_id}
+	</update>
+
+	<!-- 회원가입 -->
+	<insert id="join" parameterType="MemberVO">
+		insert into member_tbl(mem_id, MEM_NAME, MEM_PW, MEM_EMAIL, MEM_ZIPCODE, 
+			MEM_ADDR, MEM_ADDR_D, MEM_PHONE, MEM_NICK, MEM_ACCEPT_E)
+		values(#{mem_id}, #{mem_name}, #{mem_pw}, #{mem_email}, #{mem_zipcode},
+			#{mem_addr}, #{mem_addr_d}, #{mem_phone}, #{mem_nick}, #{mem_accept_e})
+	</insert>
+
+	<!-- 아이디 중복 체크 -->
+	<select id="checkIdDuplicate" parameterType="string" resultType="int">
+		select count(*)
+		from member_tbl
+		where mem_id = #{mem_id}
+	</select>
+	
+	<!-- 회원정보 수정 -->
+	<update id="modifyUserInfo" parameterType="MemberVO" >
+		update member_tbl
+		set mem_name=#{mem_name}, mem_nick=#{mem_nick}, mem_email=#{mem_email},
+			mem_phone=#{mem_phone}, mem_zipcode=#{mem_zipcode}, mem_addr=#{mem_addr}, 
+			mem_addr_d=#{mem_addr_d}, mem_accept_e=#{mem_accept_e}, mem_date_up=sysdate
+		where mem_id=#{mem_id}	
+	</update>
+	
+	<!-- 비밀번호 변경 -->
+	<update id="changePw" parameterType="MemberDTO">
+		update member_tbl
+		set mem_pw = #{mem_pw}
+		where mem_id=#{mem_id}
+	</update>
+	
+	<!-- 회원 탈퇴 -->
+	<delete id="deleteUser" parameterType="string">
+		delete from member_tbl
+		where mem_id=#{mem_id}
+	</delete>
+	
+	<!-- 로그인 정보 쿠키 저장-->
+	<update id="saveCookie" parameterType="Map">
+		update member_tbl
+		set mem_session_key = #{mem_session_key},
+			mem_session_limit = #{mem_session_limit}
+		where mem_id=#{mem_id}
+	</update>
+	 
+	
+	<!-- 쿠키에 저장된 세션값으로 로그인 정보 가져옴 -->
+	<select id="checkUserSession" parameterType="string" resultType="MemberVO">
+		select * 
+		from tbl_user 
+		where mem_session_key = #{value} and mem_session_limit > now()
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.demo.mappers.CartMapper">
+
+	<!-- 장바구니 추가 merge 이용 , 
+		장바구니에 이미 존재하면 update 
+		존재하지 않으면 insert   오라클 sql과 pl/sql을 다루는 기술 -->
+	<!-- 장바구니 테이블에 사용자가 상품정보를 처리하고 할 경우에 상품이 존재하면 수량변경 업데이트(update), 존재하지않으면 상품추가(Insert)-->
+	<insert id="addCart" parameterType="CartVO" >
+		merge into cart_tbl c
+		using dual 
+		on (c.mem_id=#{mem_id} and c.pdt_num=#{pdt_num})
+		when matched then
+			update set cart_amount = cart_amount + #{cart_amount}
+		when not matched then
+			insert (cart_code, pdt_num, mem_id, cart_amount)
+			values(seq_cart_code.NEXTVAL, #{pdt_num}, #{mem_id}, #{cart_amount})
+	</insert>
+	
+	<!-- 장바구니 삭제 -->
+	<delete id="deleteCart" parameterType="int">
+		delete from cart_tbl
+		where cart_code= #{cart_code}
+	</delete>
+	
+
+	<!-- 장바구니 수량 변경 -->
+	<update id="updateCart" parameterType="Map">
+		update cart_tbl
+		set cart_amount=#{cart_amount}
+		where cart_code=#{cart_code}
+	</update>
+	
+	<!-- 장바구니 가져오기 : 장바구니 뷰에 보여줄 항목 또는 정보파악 -->
+	<select id="getCart" parameterType="string" resultType="CartProductVO">
+		<![CDATA[ 
+			select C.cart_code, C.cart_amount, P.pdt_num, P.pdt_name, P.pdt_price, P.pdt_discount, P.pdt_img
+			from(select cart_code, pdt_num, mem_id, cart_amount 
+				from cart_tbl
+				where mem_id=#{mem_id}) C inner join product_tbl P
+			on C.pdt_num = P.pdt_num
+		]]>
+	</select>
+	
+	<!-- 장바구니 삭제(주문 완료) -->
+	<delete id="deleteCartOrder" parameterType="Map">
+		delete from cart_tbl
+		where pdt_num=#{pdt_num} and mem_id=#{mem_id}
+	</delete>
+
+
+</mapper>

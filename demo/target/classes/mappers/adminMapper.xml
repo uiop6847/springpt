@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.demo.mappers.AdminMapper">
+
+	<!-- 관리자 로그인 -->
+	<select id="login" parameterType="AdminDTO" resultType ="AdminVO">
+		select admin_id, admin_pw, admin_name, admin_date_late
+		from admin_tbl
+		where admin_id=#{admin_id} and admin_pw=#{admin_pw}
+	</select>
+	
+	<!-- 관리자 로그인 시간 업데이트 -->
+	<update id="loginUpdate" parameterType="string">
+		update admin_tbl
+		set admin_date_late = sysdate
+		where admin_id=#{admin_id}
+	</update>
+
+
+
+</mapper>

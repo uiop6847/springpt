@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.demo.mappers.AdProductMapper">
+
+	<!-- 1차카테고리 출력  코드를 null 처리, 10 -->
+	<select id="mainCGList" resultType="CategoryVO">
+		select cg_code, cg_code_prt, cg_name from category_tbl
+		where cg_code_prt is null
+	</select>
+	
+	<!-- 1차 카테고리에 해당하는 2차 카테고리 출력 -->
+	<select id="subCGList" parameterType="string" resultType="CategoryVO">
+		select cg_code, cg_code_prt, cg_name from category_tbl
+		where cg_code_prt = #{cg_code}
+	</select>
+	
+	<!-- 상품 추가 -->
+	<select id="insertProduct" parameterType="ProductVO">
+		insert into product_tbl(pdt_num, cg_code, CG_CODE_PRT, pdt_name, pdt_price, pdt_discount, 
+			pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub)
+		values (seq_pdt_num.NEXTVAL, #{cg_code},#{cg_code_prt},#{pdt_name}, #{pdt_price}, #{pdt_discount}, 
+			#{pdt_company}, #{pdt_detail}, #{pdt_img}, #{pdt_amount}, #{pdt_buy}, sysdate)
+	</select>
+	
+	<!-- 검색 조건 : 공통으로 사용하는  구문 -->
+	<sql id="search">
+		<if test="searchType != null">
+			<!-- 상품명 -->
+			<if test="searchType == 'name'.toString()"> 
+				where pdt_name like '%' || #{keyword} || '%'
+			</if>
+			<!-- 내용 -->
+			<if test="searchType == 'detail'.toString()"> 
+				where pdt_detail like '%' || #{keyword} || '%'
+			</if>
+			<!-- 제조사 -->
+			<if test="searchType == 'company'.toString()"> 
+				where pdt_company like '%' || #{keyword} || '%'
+			</if>
+			<!-- 상품명 + 내용 -->
+			<if test="searchType == 'name_detail'.toString()"> 
+				where (pdt_name like '%' || #{keyword} || '%')
+				or (pdt_detail like '%' || #{keyword} || '%')
+			</if>
+			<!-- 상품명 + 제조사 -->
+			<if test="searchType == 'name_company'.toString()"> 
+				where (pdt_name like '%' || #{keyword} || '%')
+				or (pdt_company like '%' || #{keyword} || '%')
+			</if>
+			<!-- 상품명 + 내용 + 제조사 -->
+			<if test="searchType == 'all'.toString()"> 
+				where (pdt_name like '%' || #{keyword} || '%')
+				or (pdt_detail like '%' || #{keyword} || '%')
+				or (pdt_company like '%' || #{keyword} || '%')
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 상품 리스트 (검색조건 포함) -->
+	<select id="searchListProduct" parameterType="SearchCriteria" resultType="ProductVO">
+		select pdt_num, cg_code, pdt_name, pdt_price, pdt_discount, pdt_company, 
+			pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+		from (select pdt_num, cg_code, pdt_name, pdt_price, pdt_discount, pdt_company, 
+			pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up,
+			row_number() over (order by pdt_num desc) p_seq from product_tbl
+			<include refid="search" /> )
+		where p_seq between #{rowStart} and #{rowEnd}
+	</select>
+	
+	<!-- 상품 개수 (검색조건 포함) -->
+	<select id="searchListCount" parameterType="SearchCriteria" resultType="int">
+		<![CDATA[
+			select count(pdt_num)
+			from product_tbl
+		]]>
+		<include refid="search" />
+	</select>
+	
+	<!-- 상품 정보 읽기 -->
+	<select id="readProduct" parameterType="int" resultType="ProductVO">
+		select p.pdt_num, p.cg_code, c.cg_code_prt, p.pdt_name, p.pdt_price, p.pdt_discount,
+			p.pdt_company, p.pdt_detail, p.pdt_img, p.pdt_amount, p.pdt_buy, p.pdt_date_sub, p.pdt_date_up
+		from product_tbl p inner join category_tbl c
+		on p.cg_code= c.cg_code
+		where p.pdt_num = #{pdt_num}
+	</select>
+	
+	<!-- 상품 수정 -->
+	<update id="editProduct" parameterType="ProductVO">
+		update product_tbl
+		set cg_code=#{cg_code}, pdt_name=#{pdt_name}, pdt_price=#{pdt_price}, 
+			pdt_discount=#{pdt_discount}, pdt_company=#{pdt_company}, 
+			pdt_detail=#{pdt_detail}, pdt_img=#{pdt_img}, pdt_amount=#{pdt_amount}, 
+			pdt_buy=#{pdt_buy}, pdt_date_up=sysdate
+		where pdt_num = #{pdt_num}	
+	</update>
+	
+	<!-- 상품 삭제 -->
+	<delete id="deleteProduct" parameterType="int">
+		delete product_tbl
+		where pdt_num = #{pdt_num}
+	</delete>
+	
+	<!-- 선택한 상품 수정 -->
+	<!-- java.util.Map -->
+	<update id="editChecked" parameterType="Map">
+		update product_tbl
+		set pdt_amount=#{pdt_amount}, pdt_buy=#{pdt_buy}, pdt_date_up=sysdate
+		where pdt_num=#{pdt_num}
+	</update>
+	
+	
+
+</mapper>
