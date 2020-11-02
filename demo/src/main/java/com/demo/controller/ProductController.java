@@ -156,6 +156,9 @@ public class ProductController {
 		
 		// 해당 상품에 달린 상품 후기 개수를 함께 보냄
 		model.addAttribute("totalReview", reviewService.countReview(vo.getPdt_num()));
+		
+		//방법1 : 현재소스 - 상품후기 정보 없음. 클라이언트 코드쪽에서 ajax 요청에 의하여 처리가 되어짐
+		//방법2 : 처음부터 상품후기정보를 Model 작업처리한다.
 	}
 
 	/* 

@@ -172,6 +172,7 @@ public class OrderController {
 	/* 
 	 * 장바구니 -> 구매
 	 * 실제 구매 DB작업
+	 * 1)뷰페이지에서 정보를 받아온다. 2)장바구니 테이블 참조
 	 */
 	@RequestMapping(value="orderFromCart", method=RequestMethod.POST)
 	public String orderFromCartPOST(OrderVO order, 
@@ -186,7 +187,7 @@ public class OrderController {
 		MemberDTO dto = (MemberDTO)session.getAttribute("user");
 		service.addOrderCart(order, orderDetailList, dto.getMem_id());
 		
-		return "/order/orderComplete";
+		return "redirect:/order/orderComplete";
 	}
 
 	/* 
